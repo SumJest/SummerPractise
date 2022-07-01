@@ -183,6 +183,6 @@ class Lexical:
 if __name__ == "__main__":
     lex = Lexical()
     trans = Translator()
-    lexems = trans.translate("const a1123A HEX=$A101")
+    lexems = trans.translate("const a=$1;")
     for lex in lex.lexical_analyze(lexems):
         print(lex)

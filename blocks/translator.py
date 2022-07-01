@@ -3,6 +3,7 @@ import typing
 
 from blocks import logging as logger
 
+
 class TranslatorError(Exception):
     pass
 
@@ -16,6 +17,7 @@ class SymbolClass(enum.Enum):
     semicolon = 5
     space = 6
     other = 7
+
 
 def __repr__(self):
     return f"{self.name}"
@@ -71,4 +73,4 @@ class Translator:
 
 if __name__ == "__main__":
     translator = Translator()
-    print(translator.translate("const HEX=$10A1;"))
+    print(translator.translate("const a=$1;"))
