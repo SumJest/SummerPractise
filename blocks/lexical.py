@@ -1,7 +1,7 @@
 import enum
 import typing
-
-from translator import *
+from blocks import logging as logger
+from blocks.translator import *
 
 
 class LexicalError(Exception):
@@ -65,7 +65,7 @@ class Lexical:
             buffer = word[0] + buffer
         self.words.append((buffer, wc))
 
-    def __transition__(self, __status: WordStatus, __sc: SymbolClass):
+    def __transition__(self, __status: WordStatus, __sc: SymbolClass, __name: str):
 
         status = __status
         match __sc:
@@ -76,9 +76,15 @@ class Lexical:
                     case WordStatus.identifier:
                         status = WordStatus.identifier
                     case WordStatus.hex_number_letter:
-                        status = WordStatus.hex_number_letter
+                        if ord('A') <= ord(__name) <= ord('F') or ord('a') <= ord(__name) <= ord('f'):
+                            status = WordStatus.hex_number_letter
+                        else:
+                            status = WordStatus.error
                     case WordStatus.hex_number_digit:
-                        status = WordStatus.hex_number_letter
+                        if ord('A') <= ord(__name) <= ord('F') or ord('a') <= ord(__name) <= ord('f'):
+                            status = WordStatus.hex_number_letter
+                        else:
+                            status = WordStatus.error
                     case _:
                         status = WordStatus.error
             case SymbolClass.digit:
@@ -138,6 +144,7 @@ class Lexical:
         for i in range(len(self.words)):
             if self.words[i][0].lower() in self.keywords_list:
                 self.words[i] = (self.words[i][0], WordClass.service_name)
+                logger.log(f"Word \"{self.words[i][0]}\" recognized as {self.words[i][1]}", logger.LogStatus.INFO)
 
     def lexical_analyze(self, data: typing.List[typing.Tuple[str, SymbolClass]]) -> \
             typing.List[typing.Tuple[str, WordClass]]:
@@ -152,9 +159,10 @@ class Lexical:
         for i in range(len(data)):
             letter = data[i]
 
-            status = self.__transition__(status, letter[1])
+            status = self.__transition__(status, letter[1], letter[0])
 
             if status == WordStatus.error:
+                logger.log(f"Unexpected symbol \"{letter[0]}\" by index {i} in \"{fullchain}\"", logger.LogStatus.ERROR)
                 raise LexicalError(f"Unexpected symbol \"{letter[0]}\" by index {i} in \"{fullchain}\"")
             if status == WordStatus.hex_number_letter or status == WordStatus.hex_number_digit:
                 wc = WordClass.hex_number
@@ -165,6 +173,8 @@ class Lexical:
 
             self.words.append((letter[0], wc))
             self.__collapse__()
+            last_word = self.words[len(self.words) - 1]
+            logger.log(f"Word \"{last_word[0]}\" recognized as {last_word[1]}", logger.LogStatus.INFO)
 
         self.__keywordanalyze__()
         return self.words

@@ -1,9 +1,5 @@
-import traceback
-
-from filemanager import FileManager
-from lexical import *
-from translator import *
-from syntax import *
+from blocks.filemanager import FileManager
+from blocks.syntax import *
 
 fm = FileManager()
 translatorblock = Translator()
@@ -11,16 +7,21 @@ lexicalblock = Lexical()
 syntaxblock = Syntax()
 
 
-def main():
+def check(expression: str) -> str:
     try:
-        inputdata = fm.input()
-        translatorresult = translatorblock.translate(inputdata)
-        lexicalresult = lexicalblock.lexical_analyze(translatorresult)
-        syntaxresult = syntaxblock.syntax_analyze(lexicalresult)
-        fm.output(syntaxresult)
-    except Exception:
-        print(traceback.format_exc())
-        fm.output("REJECTED")
+        translator_result = translatorblock.translate(expression)
+        lexical_result = lexicalblock.lexical_analyze(translator_result)
+        syntax_result = syntaxblock.syntax_analyze(lexical_result)
+        return syntax_result
+    except Exception as ex:
+        print(ex.args[0])
+        return "REJECTED"
+
+
+def main():
+    inputdata = fm.input()
+    result = check(inputdata)
+    fm.output(result)
 
 
 if __name__ == "__main__":

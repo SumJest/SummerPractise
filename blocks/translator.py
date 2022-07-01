@@ -1,6 +1,7 @@
 import enum
 import typing
 
+from blocks import logging as logger
 
 class TranslatorError(Exception):
     pass
@@ -61,7 +62,9 @@ class Translator:
         for i in range(len(data)):
             sc = self.__recognize__(data[i])
             if sc == SymbolClass.other:
+                logger.log(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"", logger.LogStatus.ERROR)
                 raise TranslatorError(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"")
+            logger.log(f"Letter \"{data[i]}\" recognized as {sc}", logger.LogStatus.INFO)
             result.append((data[i], sc))
         return result
 

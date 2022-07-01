@@ -1,7 +1,8 @@
 import enum
 import typing
 
-from lexical import *
+from blocks.lexical import *
+from blocks import logging as logger
 
 
 class SyntaxBlockError(Exception):
@@ -23,7 +24,7 @@ class Syntax:
     def __init__(self):
         pass
 
-    def __transition__(self, __status: SyntaxStatus,__name: str, __wc: WordClass):
+    def __transition__(self, __status: SyntaxStatus, __name: str, __wc: WordClass):
 
         status = __status
 
@@ -85,11 +86,16 @@ class Syntax:
             status = self.__transition__(status, name, wc)
 
             if status == SyntaxStatus.error:
-                raise SyntaxBlockError(f"Unexpected word \"{name}\" in \"{fullchain}\"")
+                logger.log(f"Unexpected word \"{name}\"({wc}) in \"{fullchain}\"", logger.LogStatus.ERROR)
+                raise SyntaxBlockError(f"Unexpected word \"{name}\"({wc}) in \"{fullchain}\"")
+
+            logger.log(f"Word \"{name}\"({wc}) accepted.", logger.LogStatus.INFO)
 
         if status != SyntaxStatus.semicolon:
+            logger.log(f"Excepted ';' in \"{fullchain}\"", logger.LogStatus.ERROR)
             raise SyntaxBlockError(f"Excepted ';' in \"{fullchain}\"")
         return "ACCEPT"
+
 
 if __name__ == "__main__":
     lex = Lexical()
