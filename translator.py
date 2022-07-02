@@ -1,7 +1,7 @@
 import enum
 import typing
 
-from blocks import logging as logger
+import logging as logger
 
 
 class TranslatorError(Exception):
@@ -17,6 +17,9 @@ class SymbolClass(enum.Enum):
     semicolon = 5
     space = 6
     other = 7
+
+    def __repr__(self):
+        return f"{self.name}"
 
 
 def __repr__(self):
@@ -73,4 +76,4 @@ class Translator:
 
 if __name__ == "__main__":
     translator = Translator()
-    print(translator.translate("const a=$1;"))
+    print(translator.translate("const ac=+1;"))

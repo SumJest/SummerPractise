@@ -1,7 +1,4 @@
-import enum
-import typing
-from blocks import logging as logger
-from blocks.translator import *
+from translator import *
 
 
 class LexicalError(Exception):
@@ -183,6 +180,8 @@ class Lexical:
 if __name__ == "__main__":
     lex = Lexical()
     trans = Translator()
-    lexems = trans.translate("const a=$1;")
-    for lex in lex.lexical_analyze(lexems):
-        print(lex)
+    lex_trans = trans.translate("const uno=$1h;")
+    print(lex_trans)
+    lexems = lex.lexical_analyze(lex_trans)
+    print(lexems)
+

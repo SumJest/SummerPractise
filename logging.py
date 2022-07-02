@@ -1,9 +1,10 @@
 import datetime
 import enum
 import inspect
-from blocks.filemanager import FileManager
+from filemanager import FileManager
 
 fm = FileManager()
+
 
 class LogStatus(enum.Enum):
     INFO = 0
@@ -21,10 +22,20 @@ def get_block_name(frame) -> str:
 
 
 def getNowTime() -> str:
+    """
+    Function format current time
+    :return: str
+    """
     return datetime.datetime.now().strftime("%d.%m.%Y-%H:%M:%S")
 
 
 def log(msg: str, status: LogStatus):
+    """
+    Function build a log message and send to write it in log file
+    :param msg: str
+    :param status: LogStatus
+    :return:
+    """
     blockname = get_block_name(inspect.currentframe().f_back)
     time = getNowTime()
     log_message = f"[{status.name}] [{time}] {blockname}: {msg}"

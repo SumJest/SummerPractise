@@ -1,8 +1,5 @@
-import enum
-import typing
-
-from blocks.lexical import *
-from blocks import logging as logger
+from lexical import *
+import logging as logger
 
 
 class SyntaxBlockError(Exception):
@@ -101,7 +98,9 @@ if __name__ == "__main__":
     lex = Lexical()
     trans = Translator()
     syntax = Syntax()
-    lexems = trans.translate("cOnst; asd=$A101a1;")
+    lexems = trans.translate("var five=5;")
     lexems2 = lex.lexical_analyze(lexems)
+    print(lexems2)
     result = syntax.syntax_analyze(lexems2)
+
     print(result)

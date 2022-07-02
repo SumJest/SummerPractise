@@ -1,5 +1,5 @@
-from blocks.filemanager import FileManager
-from blocks.syntax import *
+from filemanager import FileManager
+from syntax import *
 
 fm = FileManager()
 translatorblock = Translator()
@@ -15,7 +15,7 @@ def check(expression: str) -> str:
         return syntax_result
     except Exception as ex:
         print(ex.args[0])
-        return "REJECTED"
+        return "REJECT"
 
 
 def main():

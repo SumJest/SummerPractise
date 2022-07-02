@@ -27,7 +27,6 @@ class FileManager:
         Function returns data from input file
         :return: str
         """
-        input_data = ""
         with open(self.__files__['input'], 'r') as f_io:
             input_data = f_io.read()
             f_io.close()
