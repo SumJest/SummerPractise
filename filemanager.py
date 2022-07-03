@@ -48,7 +48,7 @@ class FileManager:
         :param log_message: str
         :return:
         """
-        if f"log_{blockname.rstrip('.py')}" not in self.__files__.keys():
+        if f"log_{blockname}" not in self.__files__.keys():
             print(f"Not found log file for {blockname}.")
             return
         log_file = self.__files__[f"log_{blockname.rstrip('.py')}"]

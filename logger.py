@@ -12,13 +12,13 @@ class LogStatus(enum.Enum):
     ERROR = 2
 
 
-def get_block_name(frame) -> str:
+def getBlockName(frame) -> str:
     """
     Function gets filename from frame which called function.
     :param frame: FramType
     :return: str
     """
-    return frame.f_code.co_filename.split('\\').pop()
+    return frame.f_code.co_filename.split('\\').pop().rstrip('.py')
 
 
 def getNowTime() -> str:
@@ -36,7 +36,7 @@ def log(msg: str, status: LogStatus):
     :param status: LogStatus
     :return:
     """
-    blockname = get_block_name(inspect.currentframe().f_back)
+    blockname = getBlockName(inspect.currentframe().f_back)
     time = getNowTime()
     log_message = f"[{status.name}] [{time}] {blockname}: {msg}"
     fm.write_log(blockname, log_message)
