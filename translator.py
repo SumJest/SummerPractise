@@ -1,37 +1,20 @@
-import enum
 import typing
 
-import logging as logger
+import logger
 
-
-class TranslatorError(Exception):
-    pass
-
-
-class SymbolClass(enum.Enum):
-    letter = 0
-    digit = 1
-    sign = 2
-    equal = 3
-    dollar = 4
-    semicolon = 5
-    space = 6
-    other = 7
-
-    def __repr__(self):
-        return f"{self.name}"
-
-
-def __repr__(self):
-    return f"{self.name}"
+from utils.exceptions import TranslatorBlockError
+from utils.objects import SymbolClass
 
 
 class Translator:
+    safe_mode: bool
+    logging: bool
 
-    def __init__(self):
-        pass
+    def __init__(self, safe_mode: bool = False, logging: bool = True):
+        self.safe_mode = safe_mode
+        self.logging = logging
 
-    def __recognize__(self, letter: str) -> SymbolClass | None:
+    def _recognize(self, letter: str) -> SymbolClass | None:
         if len(letter) != 1:
             return None
         letter_code = ord(letter)
@@ -56,20 +39,25 @@ class Translator:
             case _:
                 return SymbolClass.other
 
-    def translate(self, data: str) -> typing.List[typing.Tuple[str, SymbolClass]]:
+    def translate(self, data: str) -> typing.List[typing.Tuple[str, SymbolClass]] | None:
         """
-        Function translates string line data and returns list of tuples that contain letter and class of letter
+        Function translates string line data and returns list of tuples that contain letter and class of letter.
         :param data: str
-        :return: list(str,SymbolClass)
+        :return: list(str,SymbolClass), None if safe-mode.
         """
         data = data.rstrip("\n")
         result = []
         for i in range(len(data)):
-            sc = self.__recognize__(data[i])
+            sc = self._recognize(data[i])
             if sc == SymbolClass.other:
-                logger.log(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"", logger.LogStatus.ERROR)
-                raise TranslatorError(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"")
-            logger.log(f"Letter \"{data[i]}\" recognized as {sc}", logger.LogStatus.INFO)
+                if self.logging:
+                    logger.log(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"", logger.LogStatus.ERROR)
+                if self.safe_mode:
+                    return None
+                else:
+                    raise TranslatorBlockError(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"")
+            if self.logging:
+                logger.log(f"Letter \"{data[i]}\" recognized as {sc}", logger.LogStatus.INFO)
             result.append((data[i], sc))
         return result
 

@@ -1,65 +1,60 @@
-from lexical import *
-import logging as logger
+import logger
+import enum
+import typing
 
-
-class SyntaxBlockError(Exception):
-    pass
-
-
-class SyntaxStatus(enum.Enum):
-    start = 0
-    service_name_const = 1
-    space = 2
-    identifier = 3
-    equal = 4
-    value = 5
-    semicolon = 6
-    error = 7
+from lexical import Lexical, WordClass
+from translator import SymbolClass, Translator
+from utils.exceptions import SyntaxBlockError
+from utils.objects import WordClass, SyntaxStatus
 
 
 class Syntax:
-    def __init__(self):
-        pass
+    safe_mode: bool
+    logging: bool
 
-    def __transition__(self, __status: SyntaxStatus, __name: str, __wc: WordClass):
+    def __init__(self, safe_mode: bool = False, logging: bool = True):
+        self.safe_mode = safe_mode
+        self.logging = logging
 
-        status = __status
+    def _transition(self, status: SyntaxStatus, name: str, wc: WordClass):
 
-        match __wc:
+        status = status
+
+        match wc:
             case WordClass.identifier:
-                if __status == SyntaxStatus.space:
+                if status == SyntaxStatus.space:
                     status = SyntaxStatus.identifier
                 else:
                     status = SyntaxStatus.error
             case WordClass.number:
-                if __status == SyntaxStatus.equal:
+                if status == SyntaxStatus.equal:
                     status = SyntaxStatus.value
                 else:
                     status = SyntaxStatus.error
             case WordClass.hex_number:
-                if __status == SyntaxStatus.equal:
+                if status == SyntaxStatus.equal:
                     status = SyntaxStatus.value
                 else:
                     status = SyntaxStatus.error
             case WordClass.equal:
-                if __status == SyntaxStatus.identifier:
+                if status == SyntaxStatus.identifier:
                     status = SyntaxStatus.equal
                 else:
                     status = SyntaxStatus.error
             case WordClass.semicolon:
-                if __status == SyntaxStatus.value:
+                if status == SyntaxStatus.value:
                     status = SyntaxStatus.semicolon
                 else:
                     status = SyntaxStatus.error
             case WordClass.space:
-                if __status == SyntaxStatus.service_name_const:
+                if status == SyntaxStatus.service_name_const:
                     status = SyntaxStatus.space
-                elif __status == SyntaxStatus.space:
+                elif status == SyntaxStatus.space:
                     status = SyntaxStatus.space
                 else:
                     status = SyntaxStatus.error
             case WordClass.service_name:
-                if __status == SyntaxStatus.start and __name.lower() == "const":
+                if status == SyntaxStatus.start and name.lower() == "const":
                     status = SyntaxStatus.service_name_const
                 else:
                     status = SyntaxStatus.error
@@ -69,7 +64,7 @@ class Syntax:
     def syntax_analyze(self, data: typing.List[typing.Tuple[str, WordClass]]) -> str:
         """
         Function analyzes a chain on syntactic match with example "CONST <identifier>=<value>;"
-        Result: ACCEPT or REJECT or throws an SyntaxBlockError
+        Result: ACCEPT or REJECT or throws an SyntaxBlockError if safe-mode off.
         :param data: A list of tuple str and WordClass
         :return: str
         """
@@ -80,17 +75,26 @@ class Syntax:
             name = data[i][0]
             wc = data[i][1]
 
-            status = self.__transition__(status, name, wc)
+            status = self._transition(status, name, wc)
 
             if status == SyntaxStatus.error:
-                logger.log(f"Unexpected word \"{name}\"({wc}) in \"{fullchain}\"", logger.LogStatus.ERROR)
-                raise SyntaxBlockError(f"Unexpected word \"{name}\"({wc}) in \"{fullchain}\"")
+                if self.logging:
+                    logger.log(f"Unexpected word \"{name}\"({wc}) in \"{fullchain}\"", logger.LogStatus.ERROR)
+                if self.safe_mode:
+                    return "REJECT"
+                else:
+                    raise SyntaxBlockError(f"Unexpected word \"{name}\"({wc}) in \"{fullchain}\"")
 
-            logger.log(f"Word \"{name}\"({wc}) accepted.", logger.LogStatus.INFO)
+            if self.logging:
+                logger.log(f"Word \"{name}\"({wc}) accepted.", logger.LogStatus.INFO)
 
         if status != SyntaxStatus.semicolon:
-            logger.log(f"Excepted ';' in \"{fullchain}\"", logger.LogStatus.ERROR)
-            raise SyntaxBlockError(f"Excepted ';' in \"{fullchain}\"")
+            if self.logging:
+                logger.log(f"Excepted ';' in \"{fullchain}\"", logger.LogStatus.ERROR)
+            if self.safe_mode:
+                return "REJECT"
+            else:
+                raise SyntaxBlockError(f"Excepted ';' in \"{fullchain}\"")
         return "ACCEPT"
 
 

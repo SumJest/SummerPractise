@@ -1,5 +1,10 @@
+import traceback
+
 from filemanager import FileManager
-from syntax import *
+from translator import Translator
+from lexical import Lexical
+from syntax import Syntax
+from utils.exceptions import RecognizerError
 
 fm = FileManager()
 translatorblock = Translator()
@@ -13,14 +18,14 @@ def check(expression: str) -> str:
         lexical_result = lexicalblock.lexical_analyze(translator_result)
         syntax_result = syntaxblock.syntax_analyze(lexical_result)
         return syntax_result
-    except Exception as ex:
+    except RecognizerError as ex:
         print(ex.args[0])
         return "REJECT"
 
 
 def main():
-    inputdata = fm.input()
-    result = check(inputdata)
+    input_data = fm.input()
+    result = check(input_data)
     fm.output(result)
 
 
