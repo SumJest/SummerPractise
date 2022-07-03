@@ -18,8 +18,7 @@ def check(expression: str) -> str:
         lexical_result = lexicalblock.lexical_analyze(translator_result)
         syntax_result = syntaxblock.syntax_analyze(lexical_result)
         return syntax_result
-    except RecognizerError as ex:
-        print(ex.args[0])
+    except RecognizerError:
         return "REJECT"
 
 
