@@ -94,7 +94,7 @@ class Lexical:
             case SymbolClass.dollar:
                 match __status:
                     case WordStatus.idle:
-                        status = WordStatus.hex_number_digit
+                        status = WordStatus.hex_number_letter
                     case _:
                         status = WordStatus.error
             case SymbolClass.semicolon:
@@ -166,7 +166,7 @@ class Lexical:
 if __name__ == "__main__":
     lex = Lexical()
     trans = Translator()
-    lex_trans = trans.translate("const uno=$1h;")
+    lex_trans = trans.translate("const Expr=10 * 20 div 10 mod 15 - 44 + 112;")
     print(lex_trans)
     lexems = lex.lexical_analyze(lex_trans)
     print(lexems)

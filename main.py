@@ -23,8 +23,12 @@ def check(expression: str) -> str:
 
 
 def main():
+    # input_data = ' '
+    # while input_data:
+    #     input_data = input()
     input_data = fm.input()
     result = check(input_data)
+    # print(result)
     fm.output(result)
 
 

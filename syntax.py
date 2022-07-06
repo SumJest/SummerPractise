@@ -22,7 +22,7 @@ class Syntax:
 
         match wc:
             case WordClass.identifier:
-                if status == SyntaxStatus.space:
+                if status == SyntaxStatus.service_name_const:
                     status = SyntaxStatus.identifier
                 else:
                     status = SyntaxStatus.error
@@ -47,12 +47,13 @@ class Syntax:
                 else:
                     status = SyntaxStatus.error
             case WordClass.space:
-                if status == SyntaxStatus.service_name_const:
-                    status = SyntaxStatus.space
-                elif status == SyntaxStatus.space:
-                    status = SyntaxStatus.space
-                else:
-                    status = SyntaxStatus.error
+                # if status == SyntaxStatus.service_name_const:
+                #     status = SyntaxStatus.space
+                # elif status == SyntaxStatus.space:
+                #     status = SyntaxStatus.space
+                # else:
+                #     status = SyntaxStatus.error
+                pass
             case WordClass.service_name:
                 if status == SyntaxStatus.start and name.lower() == "const":
                     status = SyntaxStatus.service_name_const
