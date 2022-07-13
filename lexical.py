@@ -3,13 +3,13 @@ import typing
 import logger
 from translator import Translator, SymbolClass
 from utils.exceptions import LexicalBlockError
-from utils.objects import SymbolClass, WordClass, WordStatus
+from utils.objects import SymbolClass, WordClass, WordStatus, Lexeme
 
 
 class Lexical:
     safe_mode: bool
     logging: bool
-    words: typing.List[typing.Tuple[str, WordClass]]
+    words: typing.List[Lexeme]
 
     keywords_list = ["and", "array", "asm", "begin", "break", "case", "const", "constructor", "continue", "destructor",
                      "div",
@@ -28,43 +28,43 @@ class Lexical:
 
     def _collapse(self):
 
-        if self.words[len(self.words) - 1][1] != WordClass.number and \
-                self.words[len(self.words) - 1][1] != WordClass.identifier and \
-                self.words[len(self.words) - 1][1] != WordClass.hex_number:
+        if self.words[-1].content_type != WordClass.number and \
+                self.words[-1].content_type != WordClass.identifier and \
+                self.words[-1].content_type != WordClass.hex_number:
             return
 
         word = self.words.pop()
-        buffer = word[0]
-        wc = word[1]
-        while len(self.words) > 0 and self.words[len(self.words) - 1][1] == wc:
+        buffer = word.content
+        wc = word.content_type
+        while len(self.words) > 0 and self.words[-1].content_type == wc:
             word = self.words.pop()
-            buffer = word[0] + buffer
-        self.words.append((buffer, wc))
+            buffer = word.content + buffer
+        self.words.append(Lexeme(buffer, wc))
 
-    def _transition(self, __status: WordStatus, __sc: SymbolClass, __name: str):
+    def _transition(self, status: WordStatus, lexeme: Lexeme):
 
-        status = __status
-        match __sc:
+        status = status
+        match lexeme.content_type:
             case SymbolClass.letter:
-                match __status:
+                match status:
                     case WordStatus.idle:
                         status = WordStatus.identifier
                     case WordStatus.identifier:
                         status = WordStatus.identifier
                     case WordStatus.hex_number_letter:
-                        if ord('A') <= ord(__name) <= ord('F') or ord('a') <= ord(__name) <= ord('f'):
+                        if ord('A') <= ord(lexeme.content) <= ord('F') or ord('a') <= ord(lexeme.content) <= ord('f'):
                             status = WordStatus.hex_number_letter
                         else:
                             status = WordStatus.error
                     case WordStatus.hex_number_digit:
-                        if ord('A') <= ord(__name) <= ord('F') or ord('a') <= ord(__name) <= ord('f'):
+                        if ord('A') <= ord(lexeme.content) <= ord('F') or ord('a') <= ord(lexeme.content) <= ord('f'):
                             status = WordStatus.hex_number_letter
                         else:
                             status = WordStatus.error
                     case _:
                         status = WordStatus.error
             case SymbolClass.digit:
-                match __status:
+                match status:
                     case WordStatus.idle:
                         status = WordStatus.number
                     case WordStatus.identifier:
@@ -78,13 +78,13 @@ class Lexical:
                     case _:
                         status = WordStatus.error
             case SymbolClass.sign:
-                match __status:
+                match status:
                     case WordStatus.idle:
-                        status = WordStatus.number
+                        status = WordStatus.idle
                     case _:
                         status = WordStatus.error
             case SymbolClass.equal:
-                match __status:
+                match status:
                     case WordStatus.hex_number_letter:
                         status = WordStatus.error
                     case WordStatus.error:
@@ -92,13 +92,13 @@ class Lexical:
                     case _:
                         status = WordStatus.idle
             case SymbolClass.dollar:
-                match __status:
+                match status:
                     case WordStatus.idle:
                         status = WordStatus.hex_number_letter
                     case _:
                         status = WordStatus.error
             case SymbolClass.semicolon:
-                match __status:
+                match status:
                     case WordStatus.hex_number_letter:
                         status = WordStatus.error
                     case WordStatus.error:
@@ -106,7 +106,7 @@ class Lexical:
                     case _:
                         status = WordStatus.idle
             case SymbolClass.space:
-                match __status:
+                match status:
                     case WordStatus.hex_number_letter:
                         status = WordStatus.error
                     case WordStatus.error:
@@ -118,46 +118,50 @@ class Lexical:
     def _keywordanalyze(self):
 
         for i in range(len(self.words)):
-            if self.words[i][0].lower() in self.keywords_list:
-                self.words[i] = (self.words[i][0], WordClass.service_name)
+            if self.words[i].content.lower() in self.keywords_list:
+                self.words[i].content_type = WordClass.service_name
                 if self.logging:
-                    logger.log(f"Word \"{self.words[i][0]}\" recognized as {self.words[i][1]}", logger.LogStatus.INFO)
+                    logger.log(f"Word \"{self.words[i].content}\" recognized as {self.words[i].content_type}",
+                               logger.LogStatus.INFO)
 
-    def lexical_analyze(self, data: typing.List[typing.Tuple[str, SymbolClass]]) -> \
-            typing.List[typing.Tuple[str, WordClass]] | None:
+    def lexical_analyze(self, data: typing.List[Lexeme]) -> \
+            typing.List[Lexeme] | None:
         """
         Function finds suitable words of WordClass in the chain
         :param data: list(str,SymbolClass)
         :return: list(str, WordClass) or None if safe-mode
         """
-        fullchain = "".join([i[0] for i in data])
+        fullchain = "".join([i.content for i in data])
+
         self.words = []
         status = WordStatus.idle
-        for i in range(len(data)):
-            letter = data[i]
 
-            status = self._transition(status, letter[1], letter[0])
+        for i in range(len(data)):
+            lex = data[i]
+
+            status = self._transition(status, lex)
 
             if status == WordStatus.error:
                 if self.logging:
-                    logger.log(f"Unexpected symbol \"{letter[0]}\" by index {i} in \"{fullchain}\"",
+                    logger.log(f"Unexpected symbol \"{lex.content}\" by index {i} in \"{fullchain}\"",
                                logger.LogStatus.ERROR)
                 if self.safe_mode:
                     return None
                 else:
-                    raise LexicalBlockError(f"Unexpected symbol \"{letter[0]}\" by index {i} in \"{fullchain}\"")
+                    raise LexicalBlockError(f"Unexpected symbol \"{lex.content}\" by index {i} in \"{fullchain}\"")
             if status == WordStatus.hex_number_letter or status == WordStatus.hex_number_digit:
                 wc = WordClass.hex_number
             elif status == WordStatus.idle:
-                wc = getattr(WordClass, letter[1].name)
+                wc = getattr(WordClass, lex.content_type.name)
             else:
                 wc = getattr(WordClass, status.name)
 
-            self.words.append((letter[0], wc))
+            self.words.append(Lexeme(lex.content, wc))
             self._collapse()
-            last_word = self.words[len(self.words) - 1]
+            last_word = self.words[-1]
             if self.logging:
-                logger.log(f"Word \"{last_word[0]}\" recognized as {last_word[1]}", logger.LogStatus.INFO)
+                logger.log(f"Word \"{last_word.content}\" recognized as {last_word.content_type}",
+                           logger.LogStatus.INFO)
 
         self._keywordanalyze()
         return self.words
@@ -166,7 +170,7 @@ class Lexical:
 if __name__ == "__main__":
     lex = Lexical()
     trans = Translator()
-    lex_trans = trans.translate("const Expr=10 * 20 div 10 mod 15 - 44 + 112;")
+    lex_trans = trans.translate("const a = - 4  4;")
     print(lex_trans)
     lexems = lex.lexical_analyze(lex_trans)
     print(lexems)

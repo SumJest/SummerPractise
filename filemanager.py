@@ -5,7 +5,7 @@ class FileManager:
     __dirs = ["logs"]
 
     __files = {"input": "input.txt", "output": "output.txt", "log_translator": "logs/translator.log",
-                 "log_syntax": "logs/syntax.log", "log_lexical": "logs/lexical.log"}
+               "log_syntax": "logs/syntax.log", "log_lexical": "logs/lexical.log"}
 
     def _checkpaths(self):
         for dir in self.__dirs:

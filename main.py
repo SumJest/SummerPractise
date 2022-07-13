@@ -30,6 +30,7 @@ def main():
     result = check(input_data)
     # print(result)
     fm.output(result)
+    print(1)
 
 
 if __name__ == "__main__":

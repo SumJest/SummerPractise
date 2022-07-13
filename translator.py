@@ -3,7 +3,7 @@ import typing
 import logger
 
 from utils.exceptions import TranslatorBlockError
-from utils.objects import SymbolClass
+from utils.objects import SymbolClass, Lexeme
 
 
 class Translator:
@@ -39,7 +39,7 @@ class Translator:
             case _:
                 return SymbolClass.other
 
-    def translate(self, data: str) -> typing.List[typing.Tuple[str, SymbolClass]] | None:
+    def translate(self, data: str) -> typing.List[Lexeme] | None:
         """
         Function translates string line data and returns list of tuples that contain letter and class of letter.
         :param data: str
@@ -58,7 +58,7 @@ class Translator:
                     raise TranslatorBlockError(f"Unexpected symbol \"{data[i]}\" by index {i} in \"{data}\"")
             if self.logging:
                 logger.log(f"Letter \"{data[i]}\" recognized as {sc}", logger.LogStatus.INFO)
-            result.append((data[i], sc))
+            result.append(Lexeme(data[i], sc))
         return result
 
 
