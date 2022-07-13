@@ -19,6 +19,8 @@ class Translator:
             return None
         letter_code = ord(letter)
         if ord('a') <= letter_code <= ord('z') or ord('A') <= letter_code <= ord("Z"):
+            if ord('a') <= letter_code <= ord('f') or ord('A') <= letter_code <= ord('F'):
+                return SymbolClass.hex_letter
             return SymbolClass.letter
         elif ord('0') <= letter_code <= ord('9'):
             return SymbolClass.digit

@@ -22,7 +22,8 @@ class WordClass(enum.Enum):
     space = 5
     service_name = 6
     sign = 7
-    other = 8
+    const_name = 8
+    other = 9
 
     def __repr__(self):
         return f"{self.name}"
@@ -36,7 +37,8 @@ class SymbolClass(enum.Enum):
     dollar = 4
     semicolon = 5
     space = 6
-    other = 7
+    hex_letter = 7
+    other = 8
 
     def __repr__(self):
         return f"{self.name}"

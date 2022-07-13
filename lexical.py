@@ -51,16 +51,18 @@ class Lexical:
                         status = WordStatus.identifier
                     case WordStatus.identifier:
                         status = WordStatus.identifier
+                    case _:
+                        status = WordStatus.error
+            case SymbolClass.hex_letter:
+                match status:
+                    case WordStatus.idle:
+                        status = WordStatus.identifier
+                    case WordStatus.identifier:
+                        status = WordStatus.identifier
                     case WordStatus.hex_number_letter:
-                        if ord('A') <= ord(lexeme.content) <= ord('F') or ord('a') <= ord(lexeme.content) <= ord('f'):
-                            status = WordStatus.hex_number_letter
-                        else:
-                            status = WordStatus.error
+                        status = WordStatus.hex_number_letter
                     case WordStatus.hex_number_digit:
-                        if ord('A') <= ord(lexeme.content) <= ord('F') or ord('a') <= ord(lexeme.content) <= ord('f'):
-                            status = WordStatus.hex_number_letter
-                        else:
-                            status = WordStatus.error
+                        status = WordStatus.hex_number_letter
                     case _:
                         status = WordStatus.error
             case SymbolClass.digit:
@@ -119,7 +121,10 @@ class Lexical:
 
         for i in range(len(self.words)):
             if self.words[i].content.lower() in self.keywords_list:
-                self.words[i].content_type = WordClass.service_name
+                if self.words[i].content.lower() == 'const':
+                    self.words[i].content_type = WordClass.const_name
+                else:
+                    self.words[i].content_type = WordClass.service_name
                 if self.logging:
                     logger.log(f"Word \"{self.words[i].content}\" recognized as {self.words[i].content_type}",
                                logger.LogStatus.INFO)

@@ -59,11 +59,10 @@ class Syntax:
                 # else:
                 #     status = SyntaxStatus.error
                 pass
-            case WordClass.service_name:
-                if status == SyntaxStatus.start and lexeme.content.lower() == "const":
-                    status = SyntaxStatus.service_name_const
-                else:
-                    status = SyntaxStatus.error
+            case WordClass.const_name:
+                status = SyntaxStatus.service_name_const
+            case _:
+                status = SyntaxStatus.error
 
         return status
 
