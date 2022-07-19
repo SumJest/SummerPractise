@@ -12,6 +12,7 @@ class Syntax:
     safe_mode: bool
     logging: bool
 
+
     def __init__(self, safe_mode: bool = False, logging: bool = True):
         self.safe_mode = safe_mode
         self.logging = logging
@@ -51,14 +52,6 @@ class Syntax:
                     status = SyntaxStatus.semicolon
                 else:
                     status = SyntaxStatus.error
-            case WordClass.space:
-                # if status == SyntaxStatus.service_name_const:
-                #     status = SyntaxStatus.space
-                # elif status == SyntaxStatus.space:
-                #     status = SyntaxStatus.space
-                # else:
-                #     status = SyntaxStatus.error
-                pass
             case WordClass.const_name:
                 status = SyntaxStatus.service_name_const
             case _:
@@ -66,14 +59,13 @@ class Syntax:
 
         return status
 
-    def syntax_analyze(self, data: typing.List[Lexeme]) -> str:
+    def syntax_analyze(self, data: typing.List[Lexeme], full_chain : str | None = None) -> str:
         """
         Function analyzes a chain on syntactic match with example "CONST <identifier>=<value>;"
         Result: ACCEPT or REJECT or throws an SyntaxBlockError if safe-mode off.
         :param data: A list of tuple str and WordClass
         :return: str
         """
-        fullchain = "".join([i.content for i in data])
         status = SyntaxStatus.start
 
         for i in range(len(data)):
@@ -82,23 +74,25 @@ class Syntax:
             status = self._transition(status, lexeme)
 
             if status == SyntaxStatus.error:
+                message = f"Unexpected word {lexeme} in \"{full_chain}\""
                 if self.logging:
-                    logger.log(f"Unexpected word {lexeme} in \"{fullchain}\"", logger.LogStatus.ERROR)
+                    logger.log(message, logger.LogStatus.ERROR)
                 if self.safe_mode:
                     return "REJECT"
                 else:
-                    raise SyntaxBlockError(f"Unexpected word {lexeme} in \"{fullchain}\"")
+                    raise SyntaxBlockError(message)
 
             if self.logging:
                 logger.log(f"Word {lexeme} accepted.", logger.LogStatus.INFO)
 
         if status != SyntaxStatus.semicolon:
+            message = f"Excepted ';' in \"{full_chain}\""
             if self.logging:
-                logger.log(f"Excepted ';' in \"{fullchain}\"", logger.LogStatus.ERROR)
+                logger.log(message, logger.LogStatus.ERROR)
             if self.safe_mode:
                 return "REJECT"
             else:
-                raise SyntaxBlockError(f"Excepted ';' in \"{fullchain}\"")
+                raise SyntaxBlockError(message)
         return "ACCEPT"
 
 

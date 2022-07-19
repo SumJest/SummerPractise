@@ -49,40 +49,53 @@ class Lexical:
                 match status:
                     case WordStatus.idle:
                         status = WordStatus.identifier
+                        self.words.append(Lexeme(lexeme.content, WordClass.identifier))
                     case WordStatus.identifier:
                         status = WordStatus.identifier
+                        self.words[-1].content += lexeme.content
+                        self.words
                     case _:
                         status = WordStatus.error
             case SymbolClass.hex_letter:
                 match status:
                     case WordStatus.idle:
                         status = WordStatus.identifier
+                        self.words.append(Lexeme(lexeme.content, WordClass.identifier))
                     case WordStatus.identifier:
                         status = WordStatus.identifier
+                        self.words[-1].content += lexeme.content
                     case WordStatus.hex_number_letter:
                         status = WordStatus.hex_number_letter
+                        self.words[-1].content += lexeme.content
                     case WordStatus.hex_number_digit:
                         status = WordStatus.hex_number_letter
+                        self.words[-1].content += lexeme.content
                     case _:
                         status = WordStatus.error
             case SymbolClass.digit:
                 match status:
                     case WordStatus.idle:
                         status = WordStatus.number
+                        self.words.append(Lexeme(lexeme.content, WordClass.number))
                     case WordStatus.identifier:
                         status = WordStatus.identifier
+                        self.words[-1].content += lexeme.content
                     case WordStatus.number:
                         status = WordStatus.number
+                        self.words[-1].content += lexeme.content
                     case WordStatus.hex_number_letter:
                         status = WordStatus.hex_number_digit
+                        self.words[-1].content += lexeme.content
                     case WordStatus.hex_number_digit:
                         status = WordStatus.hex_number_digit
+                        self.words[-1].content += lexeme.content
                     case _:
                         status = WordStatus.error
             case SymbolClass.sign:
                 match status:
                     case WordStatus.idle:
                         status = WordStatus.idle
+                        self.words.append(Lexeme(lexeme.content, WordClass.sign))
                     case _:
                         status = WordStatus.error
             case SymbolClass.equal:
@@ -93,10 +106,14 @@ class Lexical:
                         status = WordStatus.error
                     case _:
                         status = WordStatus.idle
+                        self.words.append(Lexeme(lexeme.content, WordClass.equal))
+
             case SymbolClass.dollar:
                 match status:
                     case WordStatus.idle:
                         status = WordStatus.hex_number_letter
+                        self.words.append(Lexeme(lexeme.content, WordClass.hex_number))
+
                     case _:
                         status = WordStatus.error
             case SymbolClass.semicolon:
@@ -107,6 +124,7 @@ class Lexical:
                         status = WordStatus.error
                     case _:
                         status = WordStatus.idle
+                        self.words.append(Lexeme(lexeme.content, WordClass.semicolon))
             case SymbolClass.space:
                 match status:
                     case WordStatus.hex_number_letter:
@@ -154,19 +172,19 @@ class Lexical:
                     return None
                 else:
                     raise LexicalBlockError(f"Unexpected symbol \"{lex.content}\" by index {i} in \"{fullchain}\"")
-            if status == WordStatus.hex_number_letter or status == WordStatus.hex_number_digit:
-                wc = WordClass.hex_number
-            elif status == WordStatus.idle:
-                wc = getattr(WordClass, lex.content_type.name)
-            else:
-                wc = getattr(WordClass, status.name)
-
-            self.words.append(Lexeme(lex.content, wc))
-            self._collapse()
-            last_word = self.words[-1]
-            if self.logging:
-                logger.log(f"Word \"{last_word.content}\" recognized as {last_word.content_type}",
-                           logger.LogStatus.INFO)
+            #if status == WordStatus.hex_number_letter or status == WordStatus.hex_number_digit:
+            #    wc = WordClass.hex_number
+            #elif status == WordStatus.idle:
+            #    wc = getattr(WordClass, lex.content_type.name)
+            #else:
+            #    wc = getattr(WordClass, status.name)
+            if lex.content_type != SymbolClass.space:
+            #    self.words.append(Lexeme(lex.content, wc))
+            #self._collapse()
+                last_word = self.words[-1]
+                if self.logging:
+                    logger.log(f"Word \"{last_word.content}\" recognized as {last_word.content_type}",
+                               logger.LogStatus.INFO)
 
         self._keywordanalyze()
         return self.words
